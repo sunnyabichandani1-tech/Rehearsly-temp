@@ -1523,9 +1523,20 @@ body.locked { overflow: hidden; }
 .login-view.as-modal .login-close { display: grid; }
 @keyframes lvFade { from { background: rgba(26,16,51,0); } }
 @keyframes lvRise { from { opacity: 0; transform: translateY(20px) scale(.98); } }
+/* The card floats in the centre with space around it; if the screen is
+   short, the card scrolls inside itself instead of touching the edges. */
+.login-view.as-modal { padding: 32px 20px; overflow: hidden; }
+.login-view.as-modal .login-right { max-height: 100%; display: flex; }
+.login-view.as-modal .login-form-card { max-height: calc(100vh - 64px); max-height: calc(100dvh - 64px); overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin; scrollbar-color: #D5DAE6 transparent; padding: 48px 36px 28px; }
+.login-view.as-modal .login-form-card.cont-only > :not(.login-continue):not(.login-close):not(.login-status) { display: none; }
+.login-view.as-modal .login-form-card.cont-only { padding-bottom: 32px; }
+.login-view.as-modal .login-form-card.cont-only .login-status:empty { display: none; }
+.login-continue .login-form-title { margin: 0 0 6px; }
+.login-view.as-modal .login-form-card.cont-only .login-continue-label { margin-top: 0; }
 @media (max-width: 520px) {
-  .login-view.as-modal { padding: 12px; align-items: flex-start; }
-  .login-view.as-modal .login-form-card { padding: 54px 22px 26px; }
+  .login-view.as-modal { padding: 16px 12px; }
+  .login-view.as-modal .login-form-card { padding: 50px 22px 24px; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); }
 }
 @media (prefers-reduced-motion: reduce) { .login-view.as-modal, .login-view.as-modal .login-form-card { animation: none; } }
 
@@ -2370,10 +2381,10 @@ html.v2-live, html.v2-live body { overflow-x: clip !important; overflow-y: visib
     <div class="login-form-card">
       <button class="login-close" type="button" id="btn-login-close" aria-label="Close">✕</button>
       <div class="login-continue hidden" id="login-continue">
+        <h2 class="login-form-title">Welcome back</h2>
         <p class="login-continue-label">You are already set up on this browser</p>
         <button class="login-primary" type="button" id="btn-continue-as">Continue as <span id="continue-email">you</span></button>
-        <button class="login-link" type="button" id="btn-use-other">Use a different account</button>
-        <div class="login-or"><span>or log in below</span></div>
+        <button class="login-link" type="button" id="btn-use-other">Log in with a different account</button>
       </div>
 
       <div class="login-tabs">
@@ -7044,6 +7055,7 @@ window.EMBEDDED_BOOK_DATA = JSON.parse("{\"questions\": [{\"id\": \"q0002\", \"p
     var row = $("#login-continue");
     if (!row) return;
     row.classList.toggle("hidden", !on);
+    var card = row.closest(".login-form-card"); if (card) card.classList.toggle("cont-only", !!on);
     if (on) {
       var s2 = getSettings();
       var who = s2.authName ? s2.authName.split(" ")[0] : (s2.authEmail || "you");
@@ -16041,13 +16053,12 @@ window.EMBEDDED_BOOK_DATA = JSON.parse("{\"questions\": [{\"id\": \"q0002\", \"p
     v2Init();
     v2CheckOwner();
 
-    // Every visit starts on the landing page. Nothing behind it is shown
-    // until someone taps Continue or logs in. Someone still signed in on
-    // this browser gets the login card straight away, with Continue.
+    // Every visit starts on the landing page. The login card opens only
+    // when the visitor taps Log in or Start free; someone still signed in
+    // on this browser then sees Continue on that card.
     var canContinue = mayContinue();
     if (signedIn() && !canContinue) lockSession();
     showLanding(true);
-    if (canContinue) showLogin(true);
     setAuthMode("login");
     showContinueRow(canContinue);
     var known = getSettings().authEmail || "";
